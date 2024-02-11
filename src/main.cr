@@ -6,6 +6,8 @@ DEFAULT_DELAY = 200_i64
 DEFAULT_PORT = 1234
 DELAY_VARIANCE = 0.1
 SOCKET_BUFFER_SIZE = 1024 * 1024 * 8 # 8K
+HELP_BANNER = "Use delay-proxy [target-host:]port [proxy-port] [delay in milliseconds]"
+VERSION = {{ `shards version "#{__DIR__}"`.chomp.stringify }}
 
 def forward_socket(src : IO, dst : IO, label, delay : Int)
   buffer = Bytes.new(SOCKET_BUFFER_SIZE)
@@ -54,7 +56,16 @@ def parse_host_port(str : String, default_port : Int? = nil)
 end
 
 def parse_options
-  abort("Use delay-proxy [target-host:]port [proxy-port] [delay in milliseconds]") if ARGV.size < 1
+  abort(HELP_BANNER) if ARGV.size < 1
+  if ARGV.includes?("--help") || ARGV.includes?("-h")
+    puts(HELP_BANNER)
+    exit
+  end
+
+  if ARGV.includes?("--version")
+    puts(VERSION)
+    exit
+  end
 
   target_host, target_port = parse_host_port(ARGV[0])
   proxy_port = ARGV[1]?.try(&.to_i) || DEFAULT_PORT
