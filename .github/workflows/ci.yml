@@ -1,0 +1,28 @@
+name: Crystal CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        crystal: [latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+      - name: Check out repository code
+        uses: actions/checkout@v6
+      - name: Install crystal dependencies
+        run: shards install
+      - name: Linter
+        run: crystal tool format --check
+      - name: Build
+        run: shards build
+      - name: Run tests
+        run: crystal spec -v --order=random
