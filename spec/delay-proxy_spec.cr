@@ -21,7 +21,7 @@ describe "delay-proxy" do
 
     sleep(1)
     response = HTTP::Client.get "http://localhost:1234"
-    response.status_code.should eq(200)      # => 200
+    response.status_code.should eq(200)
     response.body.should eq("Hello world!")
     proxy.not_nil!.signal(:term)
   end

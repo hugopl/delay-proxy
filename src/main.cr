@@ -2,12 +2,12 @@ require "socket"
 require "colorize"
 require "log"
 
-DEFAULT_DELAY = 200_i64
-DEFAULT_PORT = 1234
-DELAY_VARIANCE = 0.1
+DEFAULT_DELAY      = 200_i64
+DEFAULT_PORT       =    1234
+DELAY_VARIANCE     =     0.1
 SOCKET_BUFFER_SIZE = 1024 * 1024 * 8 # 8K
-HELP_BANNER = "Use delay-proxy [target-host:]port [proxy-port] [delay in milliseconds]"
-VERSION = {{ `shards version "#{__DIR__}"`.chomp.stringify }}
+HELP_BANNER        = "Use delay-proxy [target-host:]port [proxy-port] [delay in milliseconds]"
+VERSION            = {{ `shards version "#{__DIR__}"`.chomp.stringify }}
 
 def forward_socket(src : IO, dst : IO, label, delay : Int)
   buffer = Bytes.new(SOCKET_BUFFER_SIZE)
