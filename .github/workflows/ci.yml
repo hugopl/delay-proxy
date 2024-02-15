@@ -1,0 +1,26 @@
+name: Crystal CI
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '20 16 * * 6'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Install crystal dependencies
+        run: shards install
+      - name: Linter
+        run: crystal tool format --check
+      - name: Build
+        run: crystal build src/main.cr
+      - name: Run tests
+        run: crystal spec -v --order=random
