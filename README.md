@@ -13,7 +13,7 @@ First install the [crystal language compiler](https://crystal-lang.org/install/)
 ```
 git clone github.com/hugopl/delay-proxy.git
 cd delay-proxy
-crystal build --release src/main.cr
+crystal build --release src/main.cr -o bin/delay-proxy
 ```
 
 Then copy `bin/delay-proxy` to whatever you want, e.g. `/usr/bin/`.
