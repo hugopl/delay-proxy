@@ -96,7 +96,7 @@ end
 def main
   options = parse_options
 
-  Process.on_interrupt do
+  Process.on_terminate do
     Log.info { "Bye" }
     exit
   end

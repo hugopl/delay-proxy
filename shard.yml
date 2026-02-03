@@ -8,6 +8,6 @@ targets:
   delay-proxy:
     main: src/main.cr
 
-crystal: '>= 1.11.1'
+crystal: '>= 1.19.0'
 
 license: MIT
