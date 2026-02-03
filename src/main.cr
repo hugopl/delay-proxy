@@ -28,10 +28,7 @@ def random_delay(delay : Int)
   min_delay = delay - variance
   max_delay = delay + variance
   rnd_delay = rand(min_delay..max_delay)
-  nanoseconds = (rnd_delay % 1000) * 1_000_000
-
   sleep(Time::Span.new(nanoseconds: rnd_delay * 1_000_000))
-
   rnd_delay
 end
 
