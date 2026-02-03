@@ -1,6 +1,6 @@
 require "socket"
 require "colorize"
-require "log"
+require "wait_group"
 
 DEFAULT_DELAY      = 200_i64
 DEFAULT_PORT       =    1234
@@ -13,10 +13,14 @@ def forward_socket(src : IO, dst : IO, label, delay : Int)
   buffer = Bytes.new(SOCKET_BUFFER_SIZE)
   while !src.closed?
     n = src.read(buffer)
-    next if n.zero?
+    if n.zero?
+      puts "#{label} connection closed"
+      dst.close_write
+      break
+    end
 
     rnd_delay = random_delay(delay)
-    Log.info { "#{label} #{n} bytes ⌛#{rnd_delay}ms" }
+    puts "#{label} #{n} bytes ⌛#{rnd_delay}ms"
     dst.write(buffer[0...n])
     dst.flush
   end
@@ -31,14 +35,6 @@ def random_delay(delay : Int)
   sleep(Time::Span.new(nanoseconds: rnd_delay * 1_000_000))
   rnd_delay
 end
-
-struct LogFormat < Log::StaticFormatter
-  def run
-    message
-  end
-end
-
-Log.setup(:info, Log::IOBackend.new(formatter: LogFormat))
 
 def parse_host_port(_nil : Nil, default_port : Int)
   {"localhost", default_port}
@@ -76,18 +72,16 @@ end
 
 def handle_connection(proxy_socket : Socket, target_host : String, target_port : Int, delay : Int64)
   TCPSocket.open(target_host, target_port) do |target_socket|
-    Log.info { "Proxy connected to target" }
-    wait = Channel(Nil).new(2)
-    spawn do
-      forward_socket(proxy_socket, target_socket, "->".colorize.green, delay)
-      wait.send(nil)
-    end
-    spawn do
-      forward_socket(target_socket, proxy_socket, "<-".colorize.red, delay)
-      wait.send(nil)
-    end
+    puts "Proxy connected to target"
+    wait_group = WaitGroup.new
 
-    2.times { wait.receive }
+    wait_group.spawn do
+      forward_socket(proxy_socket, target_socket, "->".colorize.green, delay)
+    end
+    wait_group.spawn do
+      forward_socket(target_socket, proxy_socket, "<-".colorize.red, delay)
+    end
+    wait_group.wait
   end
 rescue ex : Socket::ConnectError
   abort(ex.message)
@@ -97,19 +91,19 @@ def main
   options = parse_options
 
   Process.on_terminate do
-    Log.info { "Bye" }
+    puts "Bye"
     exit
   end
 
   proxy_server = TCPServer.new(options[:proxy_port])
-  Log.info { "Listening port #{options[:proxy_port]} " \
-             "and redirecting to #{options[:target_host]}:#{options[:target_port]} " \
-             "after #{options[:delay]}ms..." }
+  puts "Listening port #{options[:proxy_port]} " \
+       "and redirecting to #{options[:target_host]}:#{options[:target_port]} " \
+       "after #{options[:delay]}ms..."
 
   loop do
     if proxy_socket = proxy_server.accept?
       spawn do
-        Log.info { "Client connected to proxy" }
+        puts "Client connected to proxy"
         handle_connection(proxy_socket, options[:target_host], options[:target_port], options[:delay])
       end
     end
